@@ -1,0 +1,60 @@
+---
+# tasks file for nginx
+- name: NGINX
+  hosts: docker
+  tasks:
+    - name: Verifica o Ambiente
+      command: test -f /etc/nginx/sites-enabled/green.conf
+      register: ambiente
+      ignore_errors: True
+
+    - name: Copia o index green
+      copy:
+        src: /var/lib/jenkins/workspace/bluegreen/index.html
+        dest: /green/index.html
+      when: ambiente.rc == 1
+
+    - name: Copia o index blue
+      copy:
+        src: /var/lib/jenkins/workspace/bluegreen/index.html
+        dest: /blue/index.html
+      when: ambiente.rc == 0
+
+    - name: IP green
+      command: docker exec green hostname -I
+      register: ipgreen
+      when: ambiente.rc == 1
+
+    - name: IP blue
+      command: docker exec blue hostname -I
+      register: ipblue
+      when: ambiente.rc == 0
+
+    - name: Copia o green.conf para o NGINX
+      template:
+        src: /etc/ansible/roles/nginx/files/green.conf
+        dest: /etc/nginx/sites-enabled/green.conf
+      when: ambiente.rc == 1
+
+    - name: Copia o blue.conf para o NGINX
+      template:
+        src: /etc/ansible/roles/nginx/files/blue.conf
+        dest: /etc/nginx/sites-enabled/blue.conf
+      when: ambiente.rc == 0
+
+    - name: Remove o ambiente green
+      file:
+        path: /etc/nginx/sites-enabled/green.conf
+        state: absent
+      when: ambiente.rc == 0
+
+    - name: Remove o ambiente blue
+      file:
+        path: /etc/nginx/sites-enabled/blue.conf
+        state: absent
+      when: ambiente.rc == 1
+
+    - name: Reiniciar NGINX
+      service:
+        name: nginx
+        state: restarted

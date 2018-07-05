@@ -1,0 +1,4 @@
+- hosts: automation
+  become: yes
+  roles:
+     - { role: dj-wasabi.zabbix-server, database_type: mysql, database_type_long: mysql }

@@ -1,0 +1,27 @@
+---
+  - name: Ambiente Docker
+    hosts: docker
+    tasks:
+
+      - file:
+          path: "{{ item }}"
+          state: directory
+        with_items:
+          - /blue/
+          - /green/
+
+      - name: Blue
+        docker_container:
+          name: blue
+          image: httpd
+          state: started
+          volumes:
+            - /blue/:/usr/local/apache2/htdocs
+
+      - name: Green
+        docker_container:
+          name: green
+          image: httpd
+          state: started
+          volumes:
+            - /green/:/usr/local/apache2/htdocs

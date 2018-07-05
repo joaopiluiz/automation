@@ -1,0 +1,8 @@
+- name: Authorized-keys
+  hosts: all
+  tasks:
+    - name: Setar Authorized Keys
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', '/var/lib/jenkins/.ssh/id_rsa.pub') }}"
